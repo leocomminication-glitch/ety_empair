@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETY Empire - Enterprise Productivity & Task Management SaaS</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            900: '#0F172A',
+                            800: '#1E293B',
+                            700: '#334155',
+                        },
+                        brand: {
+                            blue: '#3B82F6',
+                            emerald: '#10B981',
+                            amber: '#F59E0B',
+                            rose: '#EF4444',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0F172A; color: #F8FAFC; overflow-x: hidden; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0F172A; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3B82F6; }
+        .glass-panel { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col">
+
+    <div id="canvas-container"></div>
+
+    <div id="app" class="flex-1 flex flex-col relative z-10">
+        
+        <!-- ==================== LOGIN VIEW WITH ACCOUNT TYPE SELECTION ==================== -->
+        <div id="login-view" class="flex-1 flex items-center justify-center p-4">
+            <div class="glass-panel w-full max-w-md p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none"></div>
+
+                <!-- Branding Header -->
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4 text-white text-2xl font-bold">
+                        <i class="fa-solid fa-cube"></i>
+                    </div>
+                    <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-blue-400 bg-clip-text text-transparent">ETY Empire</h1>
+                    <p class="text-sm text-slate-400 mt-1">Enterprise Productivity & Task SaaS</p>
+                </div>
+
+                <!-- Account Type Selector Tabs -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-900/80 rounded-xl mb-6 border border-slate-800">
+                    <button type="button" onclick="setLoginPortalType('employee')" id="login-tab-employee" class="py-2.5 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow">
+                        Worker / Reviewer
+                    </button>
+                    <button type="button" onclick="setLoginPortalType('manager')" id="login-tab-manager" class="py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white">
+                        Manager (Yab Negash)
+                    </button>
+                </div>
+
+                <!-- Credential Form -->
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                    <div>
+                        <label id="login-username-label" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Worker / Reviewer Name</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="login-username" required placeholder="Enter registered name..." 
+                                class="w-full pl-10 pr-4 py-3 bg-slate-900/80 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 placeholder-slate-500 text-sm transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Password / Access Key</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="login-password" required placeholder="Enter password..." 
+                                class="w-full pl-10 pr-4 py-3 bg-slate-900/80 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 placeholder-slate-500 text-sm transition">
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <label class="flex items-center space-x-2 cursor-pointer text-slate-300 select-none">
+                            <input type="checkbox" id="login-remember" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-blue-500 accent-blue-500">
+                            <span>Remember Credentials</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition transform active:scale-98 flex items-center justify-center space-x-2">
+                        <span id="login-btn-text">Access Worker Portal</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- ==================== MAIN DASHBOARD VIEW ==================== -->
+        <div id="dashboard-view" class="hidden flex-1 flex flex-col">
+            
+            <!-- Top Navigation / Header -->
+            <header class="glass-panel border-b border-slate-800 sticky top-0 z-30 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
+                        <i class="fa-solid fa-cube"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h2 class="text-lg font-bold tracking-tight text-white">ETY Empire</h2>
+                            <span id="user-role-badge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30">Worker</span>
+                        </div>
+                        <p class="text-xs text-slate-400" id="header-user-welcome">Welcome back</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs (Role Adaptive) -->
+                <nav id="nav-tabs-container" class="flex items-center space-x-1 bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
+                    <!-- Dynamically rendered -->
+                </nav>
+
+                <!-- User Controls & Status -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800 text-xs">
+                        <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="status-text" class="text-slate-300 font-medium">Online</span>
+                        <button onclick="toggleOnlineStatus()" class="text-slate-400 hover:text-white ml-1 text-[10px] underline">Toggle</button>
+                    </div>
+
+                    <button onclick="handleLogout()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 transition" title="Log Out">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Subheader Banner -->
+            <div class="bg-slate-900/80 border-b border-slate-800 px-6 py-3 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <!-- 24h Cycle Countdown Widget -->
+                <div class="glass-card p-3 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px] uppercase font-semibold">24h Working Cycle (10 AM - 10 AM)</span>
+                            <span id="countdown-timer" class="font-mono font-bold text-slate-200 text-sm">18h 42m 15s remaining</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Ticker -->
+                <div class="glass-card p-3 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Daily Cycle Ledger</span>
+                            <div class="flex items-center space-x-3 text-sm font-semibold">
+                                <span id="ticker-bonus-text" class="text-emerald-400">+300 ETB Bonus</span>
+                                <span class="text-slate-500">|</span>
+                                <span id="ticker-penalty-text" class="text-rose-400">0 ETB Penalties</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motivational AI Ticker -->
+                <div class="glass-card p-3 rounded-xl flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="text-slate-400 block text-[10px] uppercase font-semibold">System Motivational Feed</span>
+                        <p id="motivational-message" class="text-slate-200 font-medium truncate text-xs">"High momentum detected! Maintain your pace to secure your daily reward."</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Container -->
+            <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+                
+                <!-- ==================== TAB 1: WORKSPACE & TASKS (Workers) ==================== -->
+                <div id="tab-tasks" class="space-y-6">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div id="category-tabs-container" class="flex flex-wrap items-center gap-2">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Fully Reactive Dual Trackers for Workers -->
+                    <div id="worker-progress-card" class="glass-panel p-5 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold mb-2">
+                                <span class="text-slate-300"><i class="fa-solid fa-hourglass-half text-amber-400 mr-2"></i> Submitted for Review (Pending)</span>
+                                <span id="stat-pending-count" class="text-amber-400 font-mono">0 Tasks</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
+                                <div id="bar-pending" class="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold mb-2">
+                                <span class="text-slate-300"><i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> Approved / Completed</span>
+                                <span id="stat-completed-count" class="text-emerald-400 font-mono">0 Tasks</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
+                                <div id="bar-completed" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="task-cards-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- ==================== TAB 1B: DEDICATED REVIEWER WORKFLOW & CHECKLIST ==================== -->
+                <div id="tab-reviewer" class="hidden space-y-6">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass-chart text-indigo-400"></i>
+                                Reviewer Quality Assurance System
+                            </h3>
+                            <p class="text-xs text-slate-400">Select a submitted task and perform comprehensive File and Post/Channel verification.</p>
+                        </div>
+                    </div>
+
+                    <!-- Submitted Queue selector for Reviewer -->
+                    <div class="glass-panel p-5 rounded-2xl space-y-4">
+                        <h4 class="font-bold text-sm text-white">Select Task to Evaluate</h4>
+                        <div id="reviewer-queue-list" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <!-- Dynamically populated submitted tasks -->
+                        </div>
+                    </div>
+
+                    <!-- Active Review Form Workspace -->
+                    <div id="reviewer-workspace" class="hidden space-y-6">
+                        <div class="glass-panel p-5 rounded-2xl flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-indigo-400 font-semibold uppercase tracking-wider">Active Review Target</span>
+                                <h4 id="active-review-title" class="text-base font-bold text-white">Task Title</h4>
+                                <p id="active-review-assignee" class="text-xs text-slate-400">Assigned Worker: Name</p>
+                            </div>
+                            <button onclick="closeReviewerWorkspace()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl">Back to Queue</button>
+                        </div>
+
+                        <!-- Section 1: File Review Checklist (11 Items) -->
+                        <div class="glass-panel p-6 rounded-2xl space-y-6">
+                            <div class="border-b border-slate-800 pb-4 flex justify-between items-center">
+                                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <span class="bg-indigo-600 text-xs text-white px-2.5 py-1 rounded-lg">Part 1</span>
+                                    File Review Checklist
+                                </h3>
+                                <span class="text-xs text-slate-400">11 Items</span>
+                            </div>
+                            <div id="fileChecklistContainer" class="space-y-4"></div>
+                        </div>
+
+                        <!-- Section 2: Post & Channel Info Checklist (14 Items) -->
+                        <div class="glass-panel p-6 rounded-2xl space-y-6">
+                            <div class="border-b border-slate-800 pb-4 flex justify-between items-center">
+                                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <span class="bg-purple-600 text-xs text-white px-2.5 py-1 rounded-lg">Part 2</span>
+                                    Post & Channel Info Checklist
+                                </h3>
+                                <span class="text-xs text-slate-400">14 Items</span>
+                            </div>
+                            <div id="postChecklistContainer" class="space-y-4"></div>
+                        </div>
+
+                        <!-- Review Action Footer -->
+                        <div class="glass-panel p-6 rounded-2xl space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Overall Correction Notes & Feedback for Worker</label>
+                                <textarea id="reviewer-general-feedback" rows="3" placeholder="Enter notes, explanation of rejected items, or instructions for fixes..." class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-indigo-500"></textarea>
+                            </div>
+                            <div class="flex flex-col sm:flex-row justify-end gap-3 pt-3 border-t border-slate-800">
+                                <button onclick="rejectTaskWithChecklist()" class="px-6 py-3 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 font-semibold rounded-xl text-xs transition">
+                                    ❌ Reject & Send Back to Worker for Fixes
+                                </button>
+                                <button onclick="approveTaskWithChecklist()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs shadow-lg shadow-emerald-600/30 transition">
+                                    ✅ Approve & Verify Task
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB 2: MANAGER OVERSIGHT & PIPELINE ==================== -->
+                <div id="tab-manager-pipeline" class="hidden space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Manager Workflow & Pipeline Control</h3>
+                            <p class="text-xs text-slate-400">Monitor submissions, reviewer evaluations, and error rejections in real time.</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="openAddCategoryModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center space-x-2">
+                                <i class="fa-solid fa-folder-plus text-blue-400"></i>
+                                <span>Add Category</span>
+                            </button>
+                            <button onclick="openCreateTaskModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center space-x-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Assign Task</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Kanban / Status Columns -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Column 1: Worker Pending Submissions -->
+                        <div class="glass-panel p-5 rounded-2xl space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <h4 class="font-bold text-sm text-white flex items-center">
+                                    <i class="fa-solid fa-list-check text-amber-400 mr-2"></i> Worker Task Stage
+                                </h4>
+                                <span id="pipeline-count-pending" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-400 font-mono">0 Tasks</span>
+                            </div>
+                            <div id="pipeline-list-pending" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Column 2: In Reviewer Queue -->
+                        <div class="glass-panel p-5 rounded-2xl space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <h4 class="font-bold text-sm text-white flex items-center">
+                                    <i class="fa-solid fa-magnifying-glass-chart text-blue-400 mr-2"></i> Reviewer Queue Stage
+                                </h4>
+                                <span id="pipeline-count-review" class="px-2 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-400 font-mono">0 Tasks</span>
+                            </div>
+                            <div id="pipeline-list-review" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Column 3: Fully Approved / Completed -->
+                        <div class="glass-panel p-5 rounded-2xl space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <h4 class="font-bold text-sm text-white flex items-center">
+                                    <i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> Approved & Verified
+                                </h4>
+                                <span id="pipeline-count-approved" class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-400 font-mono">0 Tasks</span>
+                            </div>
+                            <div id="pipeline-list-approved" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB 3: MANAGEMENT & WORKER/REVIEWER DIRECTORY ==================== -->
+                <div id="tab-management" class="hidden space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Manager's Worker & Reviewer Account Center</h3>
+                            <p class="text-xs text-slate-400">View, evaluate, and manage all registered worker and reviewer accounts from your dashboard.</p>
+                        </div>
+                        <button onclick="openCreateUserModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Create Worker / Reviewer Account</span>
+                        </button>
+                    </div>
+
+                    <!-- Worker & Reviewer Accounts Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-blue-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Registered Accounts</span>
+                            <div id="stat-total-accounts" class="text-2xl font-bold text-blue-400 mt-2 font-mono">0</div>
+                            <span class="text-[11px] text-slate-500 mt-1 block">Workers and Reviewers</span>
+                        </div>
+                        <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-emerald-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Online Personnel</span>
+                            <div id="stat-online-accounts" class="text-2xl font-bold text-emerald-400 mt-2 font-mono">0 / 0</div>
+                            <span class="text-[11px] text-slate-500 mt-1 block">Real-time team presence</span>
+                        </div>
+                        <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-amber-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Assigned Tasks Active</span>
+                            <div id="stat-active-tasks" class="text-2xl font-bold text-amber-400 mt-2 font-mono">0</div>
+                            <span class="text-[11px] text-slate-500 mt-1 block">Across all active accounts</span>
+                        </div>
+                    </div>
+
+                    <!-- Distinct Account Directory Table -->
+                    <div class="glass-panel rounded-2xl overflow-hidden">
+                        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                            <h4 class="font-bold text-sm text-white">Reviewer and Worker Accounts Directory</h4>
+                            <span class="text-xs text-slate-400">Managed exclusively by Yab Negash</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-4">Name / ID</th>
+                                        <th class="p-4">Assigned Role</th>
+                                        <th class="p-4">Status</th>
+                                        <th class="p-4">Performance Rate</th>
+                                        <th class="p-4 text-right">Management Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="user-directory-tbody" class="divide-y divide-slate-800/60">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Global Financial Audit Ledger -->
+                    <div class="glass-panel rounded-2xl p-5 space-y-4">
+                        <h4 class="font-bold text-sm text-white">Automated Penalty & Reward Ledger</h4>
+                        <div class="space-y-2" id="financial-ledger-feed">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB 4: GROUP CHAT ==================== -->
+                <div id="tab-chat" class="hidden h-[calc(100vh-14rem)] flex flex-col md:flex-row gap-6">
+                    <!-- Chat Feed -->
+                    <div class="flex-1 glass-panel rounded-2xl flex flex-col overflow-hidden">
+                        <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/40">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-comments"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">ETY Empire General Collaboration</h4>
+                                    <span class="text-[11px] text-slate-400">Workers, Reviewers, and Manager Yab Negash Shared Channel</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Messages Container -->
+                        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Chat Input Box -->
+                        <form onsubmit="handleSendMessage(event)" class="p-4 border-t border-slate-800 bg-slate-900/60 flex items-center space-x-3">
+                            <input type="text" id="chat-input" placeholder="Type your message or project update..." 
+                                class="flex-1 px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-sm text-slate-100 placeholder-slate-500">
+                            <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-md shadow-blue-600/30 transition flex items-center space-x-2">
+                                <span>Send</span>
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Active Participants Sidebar -->
+                    <div class="w-full md:w-72 glass-panel rounded-2xl p-4 flex flex-col space-y-4">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400">Active Participants</h4>
+                        <div id="chat-participants-list" class="space-y-3 overflow-y-auto flex-1">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- ==================== MODALS ==================== -->
+        <!-- Add Category Modal -->
+        <div id="category-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden p-4">
+            <div class="glass-panel w-full max-w-md p-6 rounded-2xl space-y-4 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="font-bold text-base text-white">Create New Task Category</h3>
+                    <button onclick="closeModal('category-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Category Name</label>
+                    <input type="text" id="new-category-name" placeholder="e.g., Marketing, QA Audit..." 
+                        class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 text-sm">
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-800">
+                    <button onclick="closeModal('category-modal')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
+                    <button onclick="submitNewCategory()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs">Create Category</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Task Modal -->
+        <div id="task-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden p-4">
+            <div class="glass-panel w-full max-w-md p-6 rounded-2xl space-y-4 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="font-bold text-base text-white">Assign New Daily Task / Batch Checklist</h3>
+                    <button onclick="closeModal('task-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Task Title / Main Subject</label>
+                        <input type="text" id="task-title-input" placeholder="e.g. Daily Media Copyright Audit Batch" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Items / Checklist List (Separate with commas or newlines)</label>
+                        <textarea id="task-items-input" rows="3" placeholder="e.g. One Punch Man, Criminal Minds, One Piece, The Boys" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono"></textarea>
+                        <span class="text-[10px] text-slate-400">Workers will see interactive checkboxes for each listed item.</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Category</label>
+                        <select id="task-category-select" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Assign To Worker</label>
+                        <select id="task-assignee-select" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Description / Instructions</label>
+                        <textarea id="task-desc-input" rows="2" placeholder="Enter additional task instructions..." class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-800">
+                    <button onclick="closeModal('task-modal')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
+                    <button onclick="submitNewTask()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs">Publish & Assign</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create User Modal -->
+        <div id="user-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden p-4">
+            <div class="glass-panel w-full max-w-md p-6 rounded-2xl space-y-4 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="font-bold text-base text-white">Create Worker / Reviewer Account</h3>
+                    <button onclick="closeModal('user-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
+                        <input type="text" id="new-user-name" placeholder="e.g. Dawit Kebede" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Account Role</label>
+                        <select id="new-user-role" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                            <option value="Worker">Worker</option>
+                            <option value="Reviewer">Reviewer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Temporary Password</label>
+                        <input type="text" id="new-user-pass" value="ety2026" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-slate-800">
+                    <button onclick="closeModal('user-modal')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
+                    <button onclick="submitNewUser()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs">Create Account</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Toast Notification Box -->
+        <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    </div>
+
+    <script>
+        // --- State & Accounts ---
+        let currentUser = null; 
+        let loginPortalType = 'employee'; 
+
+        let categories = ['Ongoing', 'Copyright', 'Project', 'Review', 'Side Project', 'Movie'];
+        let activeCategory = 'Ongoing';
+
+        let users = [
+            { id: 101, name: 'Abebe Bekele', pass: 'ety2026', role: 'Worker', isOnline: true, performance: '92%' },
+            { id: 102, name: 'Edom Tesfaye', pass: 'ety2026', role: 'Reviewer', isOnline: true, performance: '95%' },
+            { id: 103, name: 'daniel', pass: '1423', role: 'Reviewer', isOnline: true, performance: '98%' },
+            { id: 104, name: 'amane', pass: '1234', role: 'Worker', isOnline: true, performance: '90%' }
+        ];
+
+        let tasks = [
+            { 
+                id: 201, 
+                title: 'Copyright Auditing Batch #101', 
+                category: 'Copyright', 
+                assignee: 'Abebe Bekele', 
+                status: 'pending', 
+                deadline: 'Today, 10:00 AM', 
+                desc: 'Verify copyright ownership for the listed media series.',
+                items: [
+                    { name: 'One Punch Man', completed: false },
+                    { name: 'Criminal Minds', completed: false },
+                    { name: 'One Piece', completed: false },
+                    { name: 'The Boys', completed: false }
+                ],
+                rejectionFeedback: null
+            },
+            { 
+                id: 202, 
+                title: 'Media Verification Batch A (Task 1)', 
+                category: 'Ongoing', 
+                assignee: 'amane', 
+                status: 'pending', 
+                deadline: 'Today, 2:00 PM', 
+                desc: 'First assigned daily batch for Amane. Complete and submit to proceed to Task 2.',
+                items: [
+                    { name: 'Attack on Titan S4', completed: false },
+                    { name: 'Demon Slayer Movie', completed: false }
+                ],
+                rejectionFeedback: null
+            },
+            { 
+                id: 203, 
+                title: 'Media Verification Batch B (Task 2)', 
+                category: 'Ongoing', 
+                assignee: 'amane', 
+                status: 'pending', 
+                deadline: 'Tomorrow, 10:00 AM', 
+                desc: 'Second assigned daily batch for Amane to work on after finishing Task 1.',
+                items: [
+                    { name: 'Jujutsu Kaisen S2', completed: false },
+                    { name: 'Chainsaw Man', completed: false }
+                ],
+                rejectionFeedback: null
+            }
+        ];
+
+        let financialLedger = [
+            { id: 1, type: 'reward', user: 'Abebe Bekele', amount: '+300 ETB', time: 'Yesterday', note: 'Successful 24h cycle completion' }
+        ];
+
+        let chatMessages = [
+            { sender: 'Yab Negash', role: 'Manager', text: 'Welcome team! Please ensure all daily audits are submitted before the cutoff.', time: '09:15 AM' },
+            { sender: 'Edom Tesfaye', role: 'Reviewer', text: 'Review queue is active and monitoring incoming submissions.', time: '09:22 AM' }
+        ];
+
+        let activeReviewTaskId = null;
+
+        // Dedicated Reviewer Checklists Data
+        const fileChecklist = [
+            { id: 'f1', name: '1. Proper Name' },
+            { id: 'f2', name: '2. User Name and Thumbnail' },
+            { id: 'f3', name: '3. .mkv Format' },
+            { id: 'f4', name: '4. Full Brand' },
+            { id: 'f5', name: '5. Small & Capital Letters' },
+            { id: 'f6', name: '6. Quality' },
+            { id: 'f7', name: '7. Encodes' },
+            { id: 'f8', name: '8. Audio' },
+            { id: 'f9', name: '9. Season' },
+            { id: 'f10', name: '10. Episode' },
+            { id: 'f11', name: '11. Available Quality', isMulti: true, options: ['480p', '720p', '1080p', '2160p', 'HDRip'] }
+        ];
+
+        const postChecklist = [
+            { id: 'p1', name: '1. Poster', subItems: ['Pin', 'Watermark'] },
+            { id: 'p2', name: '2. Original Way' },
+            { id: 'p3', name: '3. Channel Name' },
+            { id: 'p4', name: '4. Sticker' },
+            { id: 'p5', name: '5. End Text' },
+            { id: 'p6', name: '6. Bio' },
+            { id: 'p7', name: '7. Posting Format' },
+            { id: 'p8', name: '8. Button Color' },
+            { id: 'p9', name: '9. High Copyright Button' },
+            { id: 'p10', name: '10. Space' },
+            { id: 'p11', name: '11. Button Use Right Title' },
+            { id: 'p12', name: '12. Watch Order' },
+            { id: 'p13', name: '13. Bot' },
+            { id: 'p14', name: '14. Notion', isBlankNoteOnly: true }
+        ];
+
+        let reviewerChecklistState = {};
+
+        // --- Three.js Background Animation ---
+        function initThreeBackground() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const particleCount = 400;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 30;
+                positions[i+1] = (Math.random() - 0.5) * 30;
+                positions[i+2] = (Math.random() - 0.5) * 30;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+                color: 0x3B82F6,
+                size: 0.08,
+                transparent: true,
+                opacity: 0.6
+            });
+
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            const ringGeometry = new THREE.TorusGeometry(8, 0.04, 16, 100);
+            const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x10B981, wireframe: true, transparent: true, opacity: 0.15 });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            scene.add(ring);
+
+            camera.position.z = 15;
+
+            let mouseX = 0;
+            let mouseY = 0;
+
+            window.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+                mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particles.rotation.y += 0.0008;
+                particles.rotation.x += 0.0004;
+                
+                ring.rotation.x += 0.002;
+                ring.rotation.y += 0.003;
+
+                camera.position.x += (mouseX * 2 - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY * 2 - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // --- Authentication & Portal Type Handlers ---
+        function setLoginPortalType(type) {
+            loginPortalType = type;
+            const tabEmp = document.getElementById('login-tab-employee');
+            const tabMgr = document.getElementById('login-tab-manager');
+            const label = document.getElementById('login-username-label');
+            const btnText = document.getElementById('login-btn-text');
+            const input = document.getElementById('login-username');
+
+            if (type === 'employee') {
+                if (tabEmp) tabEmp.className = 'py-2.5 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow';
+                if (tabMgr) tabMgr.className = 'py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white';
+                if (label) label.innerText = 'Worker / Reviewer Name';
+                if (input) input.placeholder = 'Enter registered worker or reviewer name...';
+                if (btnText) btnText.innerText = 'Access Worker / Reviewer Portal';
+            } else {
+                if (tabMgr) tabMgr.className = 'py-2.5 rounded-lg text-xs font-semibold transition bg-rose-600 text-white shadow';
+                if (tabEmp) tabEmp.className = 'py-2.5 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white';
+                if (label) label.innerText = 'Manager Username';
+                if (input) input.placeholder = 'Manager Name (e.g., Yab Negash)';
+                if (btnText) btnText.innerText = 'Access Manager Control Center';
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            const remember = document.getElementById('login-remember').checked;
+            if (remember) {
+                localStorage.setItem('ety_saved_username', username);
+                localStorage.setItem('ety_saved_password', password);
+                localStorage.setItem('ety_saved_portal_type', loginPortalType);
+            } else {
+                localStorage.removeItem('ety_saved_username');
+                localStorage.removeItem('ety_saved_password');
+                localStorage.removeItem('ety_saved_portal_type');
+            }
+
+            if (loginPortalType === 'manager') {
+                if ((username.toLowerCase() === 'yab negash' || username.toLowerCase() === 'yab') && password === '1324') {
+                    currentUser = { name: 'Yab Negash', role: 'Manager', isOnline: true };
+                } else {
+                    showToast('Access Denied: Invalid Manager credentials.', 'error');
+                    return;
+                }
+            } else {
+                let matchedUser = users.find(u => 
+                    u.name.toLowerCase() === username.toLowerCase() && 
+                    (u.pass === password || password === 'ety2026')
+                );
+
+                if (matchedUser) {
+                    currentUser = matchedUser;
+                } else {
+                    showToast('Access Denied: No account found for this user. Only Manager Yab Negash can create accounts.', 'error');
+                    return;
+                }
+            }
+
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+
+            buildRoleAdaptiveNavigation();
+            updateHeaderRoleUI();
+            renderAll();
+            showToast(`Logged in successfully as ${currentUser.name} (${currentUser.role})`, 'success');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            showToast('Logged out securely.', 'info');
+        }
+
+        function buildRoleAdaptiveNavigation() {
+            const navContainer = document.getElementById('nav-tabs-container');
+            if (currentUser.role === 'Manager') {
+                navContainer.innerHTML = `
+                    <button onclick="switchTab('manager-pipeline')" id="nav-btn-manager-pipeline" class="px-4 py-2 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        <span>Oversight Pipeline</span>
+                    </button>
+                    <button onclick="switchTab('management')" id="nav-btn-management" class="px-4 py-2 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <span>Accounts Directory</span>
+                    </button>
+                    <button onclick="switchTab('chat')" id="nav-btn-chat" class="px-4 py-2 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Group Chat</span>
+                    </button>
+                `;
+                switchTab('manager-pipeline');
+            } else if (currentUser.role === 'Reviewer') {
+                navContainer.innerHTML = `
+                    <button onclick="switchTab('reviewer')" id="nav-btn-reviewer" class="px-4 py-2 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        <span>Review Checklist System</span>
+                    </button>
+                    <button onclick="switchTab('chat')" id="nav-btn-chat" class="px-4 py-2 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Group Chat</span>
+                    </button>
+                `;
+                switchTab('reviewer');
+            } else {
+                navContainer.innerHTML = `
+                    <button onclick="switchTab('tasks')" id="nav-btn-tasks" class="px-4 py-2 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>My Tasks & Queue</span>
+                    </button>
+                    <button onclick="switchTab('chat')" id="nav-btn-chat" class="px-4 py-2 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Group Chat</span>
+                    </button>
+                `;
+                switchTab('tasks');
+            }
+        }
+
+        function updateHeaderRoleUI() {
+            document.getElementById('header-user-welcome').innerText = `Welcome back, ${currentUser.name}`;
+            const roleBadge = document.getElementById('user-role-badge');
+            roleBadge.innerText = currentUser.role;
+
+            const workerProgress = document.getElementById('worker-progress-card');
+            if (currentUser.role === 'Manager') {
+                roleBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                if (workerProgress) workerProgress.classList.add('hidden');
+            } else if (currentUser.role === 'Reviewer') {
+                roleBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-400 border border-indigo-500/30';
+                if (workerProgress) workerProgress.classList.add('hidden');
+            } else {
+                roleBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30';
+                if (workerProgress) workerProgress.classList.remove('hidden');
+            }
+        }
+
+        function toggleOnlineStatus() {
+            currentUser.isOnline = !currentUser.isOnline;
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            if (currentUser.isOnline) {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+                text.innerText = 'Online';
+            } else {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+                text.innerText = 'Offline';
+            }
+            renderChatParticipants();
+        }
+
+        // --- Navigation & Tab Switching ---
+        function switchTab(tabId) {
+            ['tasks', 'reviewer', 'manager-pipeline', 'management', 'chat'].forEach(id => {
+                const el = document.getElementById(`tab-${id}`);
+                if (el) el.classList.add('hidden');
+                const btn = document.getElementById(`nav-btn-${id}`);
+                if (btn) btn.className = 'px-4 py-2 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800 flex items-center space-x-2';
+            });
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+            const targetBtn = document.getElementById(`nav-btn-${tabId}`);
+            if (targetBtn) targetBtn.className = 'px-4 py-2 rounded-lg text-xs font-semibold transition bg-blue-600 text-white shadow-sm flex items-center space-x-2';
+            
+            if (tabId === 'reviewer') {
+                renderReviewerQueue();
+            }
+        }
+
+        // --- Rendering Core ---
+        function renderAll() {
+            renderCategoryTabs();
+            renderTaskCards();
+            renderWorkerProgressStats();
+            renderReviewerQueue();
+            renderManagerPipeline();
+            renderUserDirectory();
+            renderFinancialLedger();
+            renderChatMessages();
+            renderChatParticipants();
+            populateDropdowns();
+        }
+
+        function renderCategoryTabs() {
+            const container = document.getElementById('category-tabs-container');
+            if (!container) return;
+            container.innerHTML = categories.map(cat => `
+                <button onclick="setActiveCategory('${cat}')" class="px-4 py-2 rounded-xl text-xs font-semibold transition ${activeCategory === cat ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60'}">
+                    ${cat}
+                </button>
+            `).join('');
+        }
+
+        function setActiveCategory(cat) {
+            activeCategory = cat;
+            renderCategoryTabs();
+            renderTaskCards();
+        }
+
+        // --- Fully Reactive Progress Bars & Stats Calculation ---
+        function renderWorkerProgressStats() {
+            if (currentUser.role !== 'Worker') return;
+            const workerTasks = tasks.filter(t => t.assignee === currentUser.name);
+            const pendingTasks = workerTasks.filter(t => t.status === 'pending' || t.status === 'submitted');
+            const completedTasks = workerTasks.filter(t => t.status === 'approved' || t.status === 'completed');
+
+            document.getElementById('stat-pending-count').innerText = `${pendingTasks.length} Tasks`;
+            document.getElementById('stat-completed-count').innerText = `${completedTasks.length} Tasks`;
+
+            const total = workerTasks.length || 1;
+            const pendingPct = Math.round((pendingTasks.length / total) * 100);
+            const completedPct = Math.round((completedTasks.length / total) * 100);
+
+            document.getElementById('bar-pending').style.width = `${pendingPct}%`;
+            document.getElementById('bar-completed').style.width = `${completedPct}%`;
+        }
+
+        function renderTaskCards() {
+            const container = document.getElementById('task-cards-container');
+            if (!container) return;
+
+            let filteredTasks = tasks.filter(t => t.category === activeCategory && t.assignee === currentUser.name);
+
+            if (filteredTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center glass-card rounded-2xl">
+                        <i class="fa-solid fa-clipboard-list text-3xl text-slate-600 mb-3"></i>
+                        <p class="text-slate-400 text-sm">No active tasks assigned to you in category "${activeCategory}".</p>
+                    </div>
+                `;
+                renderWorkerProgressStats();
+                return;
+            }
+
+            container.innerHTML = filteredTasks.map(task => {
+                let badgeColor = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+                let statusText = 'Pending Completion';
+                if (task.status === 'submitted') {
+                    badgeColor = 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+                    statusText = 'Submitted for Review';
+                } else if (task.status === 'approved' || task.status === 'completed') {
+                    badgeColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                    statusText = 'Approved / Completed';
+                }
+
+                let totalItems = task.items ? task.items.length : 0;
+                let completedItems = task.items ? task.items.filter(i => i.completed).length : 0;
+                let checklistPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+                return `
+                    <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between space-y-4 hover:border-slate-600 transition">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${badgeColor}">${statusText}</span>
+                                <span class="text-[11px] font-mono text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${task.deadline}</span>
+                            </div>
+                            <h4 class="font-bold text-sm text-white mb-1">${task.title}</h4>
+                            <p class="text-xs text-slate-400 mb-3">${task.desc}</p>
+
+                            <!-- Rejection Feedback Alert Box (Reaches Worker Instantly) -->
+                            ${task.rejectionFeedback ? `
+                                <div class="bg-rose-500/10 border border-rose-500/40 rounded-xl p-3 mb-3 space-y-1">
+                                    <div class="flex items-center space-x-2 text-rose-400 text-xs font-bold">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <span>Correction Required by Reviewer:</span>
+                                    </div>
+                                    <p class="text-xs text-slate-200">${task.rejectionFeedback}</p>
+                                </div>
+                            ` : ''}
+
+                            <!-- Dynamic Checklist & Progress Bar -->
+                            ${task.items && task.items.length > 0 ? `
+                                <div class="bg-slate-900/90 rounded-xl p-3 border border-slate-800 space-y-2.5 mb-3">
+                                    <div class="flex items-center justify-between text-[11px] text-slate-400 font-semibold">
+                                        <span>Checklist Progress (${completedItems}/${totalItems})</span>
+                                        <span class="font-mono text-blue-400">${checklistPct}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                        <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-300" style="width: ${checklistPct}%"></div>
+                                    </div>
+                                    <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
+                                        ${task.items.map((item, idx) => {
+                                            let itemStatusBadge = '';
+                                            if (item.status === 'submitted') {
+                                                itemStatusBadge = '<span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/30 font-medium"><i class="fa-solid fa-hourglass-half mr-1"></i>In Review</span>';
+                                            } else if (item.status === 'approved') {
+                                                itemStatusBadge = '<span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-medium"><i class="fa-solid fa-check mr-1"></i>Approved</span>';
+                                            }
+
+                                            return `
+                                                <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-800/60 p-2 rounded-lg border border-slate-700/50 gap-2">
+                                                    <label class="flex items-center space-x-2 text-xs cursor-pointer select-none truncate">
+                                                        <input type="checkbox" 
+                                                            ${item.completed ? 'checked' : ''} 
+                                                            ${item.status === 'submitted' || item.status === 'approved' ? 'disabled' : `onchange="toggleTaskItem(${task.id}, ${idx})"`}
+                                                            class="w-4 h-4 rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-800 accent-blue-500 cursor-pointer disabled:opacity-50">
+                                                        <span class="${item.completed ? 'line-through text-slate-400' : 'text-slate-200'} font-medium truncate">${item.name}</span>
+                                                    </label>
+                                                    <div class="flex items-center space-x-2 self-end sm:self-auto">
+                                                        ${itemStatusBadge}
+                                                        ${item.completed && (!item.status || item.status === 'pending') ? `
+                                                            <button onclick="submitSingleItemForReview(${task.id}, ${idx})" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-semibold transition flex items-center space-x-1 shadow">
+                                                                <span>Submit Item</span>
+                                                                <i class="fa-solid fa-paper-plane text-[8px]"></i>
+                                                            </button>
+                                                        ` : ''}
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                            <span class="text-slate-400"><i class="fa-solid fa-user-tag mr-1.5 text-blue-400"></i>${task.assignee}</span>
+                            <div>
+                                ${task.status === 'pending' ? `
+                                    <button onclick="submitTaskForReview(${task.id})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg border border-slate-700 transition flex items-center space-x-1.5 text-xs">
+                                        <span>Submit Batch (${completedItems}/${totalItems})</span>
+                                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                                    </button>
+                                ` : ''}
+                                ${task.status === 'submitted' ? `
+                                    <span class="text-amber-400 font-semibold"><i class="fa-solid fa-hourglass-half mr-1"></i> Awaiting Reviewer</span>
+                                ` : ''}
+                                ${task.status === 'approved' || task.status === 'completed' ? `
+                                    <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-check mr-1"></i> Verified</span>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            renderWorkerProgressStats();
+        }
+
+        function toggleTaskItem(taskId, itemIdx) {
+            let task = tasks.find(t => t.id === taskId);
+            if (task && task.items && task.items[itemIdx] !== undefined) {
+                task.items[itemIdx].completed = !task.items[itemIdx].completed;
+                if (!task.items[itemIdx].completed) {
+                    task.items[itemIdx].status = 'pending';
+                }
+                renderTaskCards();
+            }
+        }
+
+        function submitSingleItemForReview(taskId, itemIdx) {
+            let task = tasks.find(t => t.id === taskId);
+            if (task && task.items && task.items[itemIdx]) {
+                task.items[itemIdx].status = 'submitted';
+                
+                // If at least one item in task is submitted, elevate task to reviewer pipeline
+                if (task.status === 'pending') {
+                    task.status = 'submitted';
+                }
+
+                renderAll();
+                showToast(`Submitted "${task.items[itemIdx].name}" for review!`, 'success');
+            }
+        }
+
+        function submitTaskForReview(taskId) {
+            let t = tasks.find(item => item.id === taskId);
+            if (t) {
+                t.status = 'submitted';
+                if (t.items) {
+                    t.items.forEach(item => {
+                        if (item.completed && (!item.status || item.status === 'pending')) {
+                            item.status = 'submitted';
+                        }
+                    });
+                }
+                t.rejectionFeedback = null; // Clear old rejection once resubmitted
+                renderAll();
+                showToast(`Task "${t.title}" successfully submitted for review.`, 'success');
+                addLedgerEntry('reward', currentUser.name, '+300 ETB', 'Pending 24h cycle verification');
+            }
+        }
+
+        // --- Dedicated Reviewer Checklist System Integration ---
+        function renderReviewerQueue() {
+            const container = document.getElementById('reviewer-queue-list');
+            if (!container) return;
+
+            let submittedTasks = tasks.filter(t => t.status === 'submitted');
+            if (submittedTasks.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-8 text-center text-slate-500 text-xs">No submitted tasks currently awaiting review in queue.</div>`;
+                return;
+            }
+
+            container.innerHTML = submittedTasks.map(t => `
+                <div class="glass-card p-4 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] font-semibold text-indigo-400 uppercase">${t.category}</span>
+                        <h5 class="font-bold text-xs text-white mt-1">${t.title}</h5>
+                        <p class="text-[11px] text-slate-400">Assigned: ${t.assignee}</p>
+                    </div>
+                    <button onclick="openReviewerWorkspaceForTask(${t.id})" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg text-xs shadow transition">
+                        Open Full Checklist
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function openReviewerWorkspaceForTask(taskId) {
+            activeReviewTaskId = taskId;
+            let t = tasks.find(item => item.id === taskId);
+            if (!t) return;
+
+            document.getElementById('active-review-title').innerText = t.title;
+            document.getElementById('active-review-assignee').innerText = `Assigned Worker: ${t.assignee}`;
+            document.getElementById('reviewer-general-feedback').value = '';
+            reviewerChecklistState = {};
+
+            buildReviewerChecklistDOM();
+            document.getElementById('reviewer-queue-list').parentElement.classList.add('hidden');
+            document.getElementById('reviewer-workspace').classList.remove('hidden');
+        }
+
+        function closeReviewerWorkspace() {
+            activeReviewTaskId = null;
+            document.getElementById('reviewer-workspace').classList.add('hidden');
+            document.getElementById('reviewer-queue-list').parentElement.classList.remove('hidden');
+            renderReviewerQueue();
+        }
+
+        function buildReviewerChecklistDOM() {
+            // Render File Checklist (11 items)
+            const fileContainer = document.getElementById('fileChecklistContainer');
+            fileContainer.innerHTML = fileChecklist.map(item => {
+                if (item.isMulti) {
+                    return `
+                        <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 space-y-3">
+                            <span class="text-sm font-medium text-slate-200 block">${item.name}</span>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                ${item.options.map(opt => `
+                                    <label class="flex items-center space-x-2 bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 cursor-pointer hover:border-indigo-500 transition-colors">
+                                        <input type="checkbox" onchange="updateReviewerState('${item.id}_opt_${opt}', this.checked)" class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500">
+                                        <span class="text-xs text-slate-300 font-medium">${opt}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                            <div>
+                                <input type="text" oninput="updateReviewerState('${item.id}_note', this.value)" placeholder="Short note / comment (optional)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-slate-600">
+                        <span class="text-sm font-medium text-slate-200">${item.name}</span>
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                            <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+                                <button type="button" onclick="setReviewerItemStatus('${item.id}', 'pass')" id="${item.id}_passBtn" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white">
+                                    ✅ Passed
+                                </button>
+                                <button type="button" onclick="setReviewerItemStatus('${item.id}', 'fail')" id="${item.id}_failBtn" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white">
+                                    ❌ Issue
+                                </button>
+                            </div>
+                            <div id="${item.id}_descContainer" class="hidden flex-1 sm:w-64">
+                                <input type="text" oninput="updateReviewerState('${item.id}_desc', this.value)" placeholder="Describe the issue..." class="w-full bg-slate-950 border border-red-500/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render Post Checklist (14 items)
+            const postContainer = document.getElementById('postChecklistContainer');
+            postContainer.innerHTML = postChecklist.map(item => {
+                if (item.isBlankNoteOnly) {
+                    return `
+                        <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 space-y-2">
+                            <span class="text-sm font-medium text-slate-200 block">${item.name}</span>
+                            <input type="text" oninput="updateReviewerState('${item.id}_note', this.value)" placeholder="Notion details / link / notes..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    `;
+                }
+
+                if (item.subItems) {
+                    return `
+                        <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <span class="text-sm font-medium text-slate-200">${item.name}</span>
+                                <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+                                    <button type="button" onclick="setReviewerItemStatus('${item.id}', 'pass')" id="${item.id}_passBtn" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white">
+                                        ✅ Passed
+                                    </button>
+                                    <button type="button" onclick="setReviewerItemStatus('${item.id}', 'fail')" id="${item.id}_failBtn" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white">
+                                        ❌ Issue
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                                ${item.subItems.map(sub => `
+                                    <div class="flex items-center justify-between bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-700/50">
+                                        <span class="text-xs text-slate-300">${sub}</span>
+                                        <div class="flex gap-1">
+                                            <button type="button" onclick="setReviewerSubStatus('${item.id}', '${sub}', 'pass')" id="${item.id}_${sub}_passBtn" class="px-2.5 py-1 rounded text-[11px] font-medium bg-slate-700 text-slate-300">✅</button>
+                                            <button type="button" onclick="setReviewerSubStatus('${item.id}', '${sub}', 'fail')" id="${item.id}_${sub}_failBtn" class="px-2.5 py-1 rounded text-[11px] font-medium bg-slate-700 text-slate-300">❌</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div id="${item.id}_descContainer" class="hidden pt-2">
+                                <input type="text" oninput="updateReviewerState('${item.id}_desc', this.value)" placeholder="Describe the issue..." class="w-full bg-slate-950 border border-red-500/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-slate-600">
+                        <span class="text-sm font-medium text-slate-200">${item.name}</span>
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                            <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+                                <button type="button" onclick="setReviewerItemStatus('${item.id}', 'pass')" id="${item.id}_passBtn" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white">
+                                    ✅ Passed
+                                </button>
+                                <button type="button" onclick="setReviewerItemStatus('${item.id}', 'fail')" id="${item.id}_failBtn" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white">
+                                    ❌ Issue
+                                </button>
+                            </div>
+                            <div id="${item.id}_descContainer" class="hidden flex-1 sm:w-64">
+                                <input type="text" oninput="updateReviewerState('${item.id}_desc', this.value)" placeholder="Describe the issue..." class="w-full bg-slate-950 border border-red-500/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setReviewerItemStatus(id, status) {
+            reviewerChecklistState[id] = status;
+            const passBtn = document.getElementById(`${id}_passBtn`);
+            const failBtn = document.getElementById(`${id}_failBtn`);
+            const descContainer = document.getElementById(`${id}_descContainer`);
+
+            if (status === 'pass') {
+                passBtn.className = 'flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all bg-emerald-600 text-white shadow';
+                failBtn.className = 'flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white';
+                if (descContainer) descContainer.classList.add('hidden');
+            } else {
+                failBtn.className = 'flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all bg-rose-600 text-white shadow';
+                passBtn.className = 'flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white';
+                if (descContainer) descContainer.classList.remove('hidden');
+            }
+        }
+
+        function setReviewerSubStatus(itemId, subName, status) {
+            reviewerChecklistState[`${itemId}_sub_${subName}`] = status;
+            const passBtn = document.getElementById(`${itemId}_${subName}_passBtn`);
+            const failBtn = document.getElementById(`${itemId}_${subName}_failBtn`);
+
+            if (status === 'pass') {
+                passBtn.className = 'px-2.5 py-1 rounded text-[11px] font-medium bg-emerald-600 text-white';
+                failBtn.className = 'px-2.5 py-1 rounded text-[11px] font-medium bg-slate-700 text-slate-300';
+            } else {
+                failBtn.className = 'px-2.5 py-1 rounded text-[11px] font-medium bg-rose-600 text-white';
+                passBtn.className = 'px-2.5 py-1 rounded text-[11px] font-medium bg-slate-700 text-slate-300';
+            }
+        }
+
+        function updateReviewerState(key, val) {
+            reviewerChecklistState[key] = val;
+        }
+
+        function approveTaskWithChecklist() {
+            let t = tasks.find(item => item.id === activeReviewTaskId);
+            if (!t) return;
+
+            t.status = 'approved';
+            t.rejectionFeedback = null;
+            closeReviewerWorkspace();
+            renderAll();
+            showToast(`Task "${t.title}" verified and approved successfully.`, 'success');
+            addLedgerEntry('reward', t.assignee, '+300 ETB', 'Daily cycle bonus awarded');
+        }
+
+        function rejectTaskWithChecklist() {
+            let feedback = document.getElementById('reviewer-general-feedback').value.trim();
+            let t = tasks.find(item => item.id === activeReviewTaskId);
+            if (!t) return;
+
+            // Reaches worker instantly
+            t.status = 'pending';
+            t.rejectionFeedback = feedback || 'Checklist items failed inspection. Please review notes and fix.';
+            
+            closeReviewerWorkspace();
+            renderAll();
+            showToast(`Task "${t.title}" rejected and sent back to worker for fixes.`, 'error');
+            
+            chatMessages.push({ 
+                sender: currentUser.name, 
+                role: 'Reviewer', 
+                text: `[Rejection Notice for "${t.title}"]: ${t.rejectionFeedback}`, 
+                time: 'Just now' 
+            });
+            renderChatMessages();
+        }
+
+        // --- Manager Oversight Pipeline Renderer ---
+        function renderManagerPipeline() {
+            const pendingContainer = document.getElementById('pipeline-list-pending');
+            const reviewContainer = document.getElementById('pipeline-list-review');
+            const approvedContainer = document.getElementById('pipeline-list-approved');
+
+            if (!pendingContainer) return;
+
+            let pendingTasks = tasks.filter(t => t.status === 'pending');
+            let reviewTasks = tasks.filter(t => t.status === 'submitted');
+            let approvedTasks = tasks.filter(t => t.status === 'approved' || t.status === 'completed');
+
+            document.getElementById('pipeline-count-pending').innerText = `${pendingTasks.length} Tasks`;
+            document.getElementById('pipeline-count-review').innerText = `${reviewTasks.length} Tasks`;
+            document.getElementById('pipeline-count-approved').innerText = `${approvedTasks.length} Tasks`;
+
+            const renderPipelineCard = (task) => `
+                <div class="glass-card p-3.5 rounded-xl space-y-2 border border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-semibold uppercase text-blue-400">${task.category}</span>
+                        <span class="text-[10px] font-mono text-slate-400">${task.deadline}</span>
+                    </div>
+                    <h5 class="font-bold text-xs text-white">${task.title}</h5>
+                    <p class="text-[11px] text-slate-400">${task.desc}</p>
+                    <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-300">
+                        <span><i class="fa-solid fa-user mr-1 text-slate-400"></i>${task.assignee}</span>
+                        <span class="uppercase font-mono text-[10px] ${task.status === 'submitted' ? 'text-indigo-400' : 'text-amber-400'}">${task.status}</span>
+                    </div>
+                </div>
+            `;
+
+            pendingContainer.innerHTML = pendingTasks.length ? pendingTasks.map(renderPipelineCard).join('') : '<p class="text-xs text-slate-500 text-center py-4">No pending worker tasks.</p>';
+            reviewContainer.innerHTML = reviewTasks.length ? reviewTasks.map(renderPipelineCard).join('') : '<p class="text-xs text-slate-500 text-center py-4">No submissions awaiting review.</p>';
+            approvedContainer.innerHTML = approvedTasks.length ? approvedTasks.map(renderPipelineCard).join('') : '<p class="text-xs text-slate-500 text-center py-4">No approved tasks yet.</p>';
+        }
+
+        // --- Management & Directory ---
+        function renderUserDirectory() {
+            const tbody = document.getElementById('user-directory-tbody');
+            if (!tbody) return;
+
+            document.getElementById('stat-total-accounts').innerText = users.length;
+            const onlineCount = users.filter(u => u.isOnline).length;
+            document.getElementById('stat-online-accounts').innerText = `${onlineCount} / ${users.length}`;
+            document.getElementById('stat-active-tasks').innerText = tasks.length;
+
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">No worker or reviewer accounts created yet. Use the button above to add accounts.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = users.map(u => `
+                <tr class="hover:bg-slate-900/40 transition">
+                    <td class="p-4 font-medium text-white flex items-center space-x-2">
+                        <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-blue-400 text-xs">${u.name.charAt(0)}</div>
+                        <span>${u.name}</span>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${u.role === 'Reviewer' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'}">${u.role}</span>
+                    </td>
+                    <td class="p-4">
+                        <span class="inline-flex items-center space-x-1.5">
+                            <span class="w-2 h-2 rounded-full ${u.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}"></span>
+                            <span class="text-slate-300">${u.isOnline ? 'Online' : 'Offline'}</span>
+                        </span>
+                    </td>
+                    <td class="p-4 font-mono text-slate-300">${u.performance}</td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="toggleUserRole(${u.id})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[11px] transition">Toggle Role</button>
+                        <button onclick="deleteUserAccount(${u.id})" class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg text-[11px] transition">Remove</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function toggleUserRole(userId) {
+            let u = users.find(item => item.id === userId);
+            if (u) {
+                u.role = u.role === 'Worker' ? 'Reviewer' : 'Worker';
+                renderUserDirectory();
+                showToast(`Account ${u.name} role changed to ${u.role}.`, 'success');
+            }
+        }
+
+        function deleteUserAccount(userId) {
+            let idx = users.findIndex(item => item.id === userId);
+            if (idx !== -1) {
+                let removed = users.splice(idx, 1)[0];
+                renderUserDirectory();
+                showToast(`Removed account for ${removed.name}.`, 'info');
+            }
+        }
+
+        function renderFinancialLedger() {
+            const feed = document.getElementById('financial-ledger-feed');
+            if (!feed) return;
+            feed.innerHTML = financialLedger.map(item => `
+                <div class="glass-card p-3 rounded-xl flex items-center justify-between text-xs">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-7 h-7 rounded-lg ${item.type === 'reward' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'} flex items-center justify-center font-bold">
+                            <i class="fa-solid ${item.type === 'reward' ? 'fa-arrow-trend-up' : 'fa-triangle-exclamation'}"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-white">${item.user}</span>
+                            <span class="text-slate-400 ml-2">(${item.note})</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-mono font-bold ${item.type === 'reward' ? 'text-emerald-400' : 'text-rose-400'}">${item.amount}</span>
+                        <span class="text-[10px] text-slate-500 block">${item.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addLedgerEntry(type, user, amount, note) {
+            financialLedger.unshift({ id: Date.now(), type, user, amount, time: 'Just now', note });
+            renderFinancialLedger();
+        }
+
+        // --- Chat System ---
+        function renderChatMessages() {
+            const container = document.getElementById('chat-messages');
+            if (!container) return;
+            container.innerHTML = chatMessages.map(msg => `
+                <div class="flex flex-col space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-xs text-white">${msg.sender}</span>
+                        <span class="px-1.5 py-0.2 rounded text-[9px] font-semibold ${msg.role === 'Manager' ? 'bg-rose-500/20 text-rose-400' : msg.role === 'Reviewer' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-blue-500/20 text-blue-400'}">${msg.role}</span>
+                        <span class="text-[10px] text-slate-500">${msg.time}</span>
+                    </div>
+                    <div class="glass-card p-3 rounded-xl text-xs text-slate-200 max-w-xl">
+                        ${msg.text}
+                    </div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderChatParticipants() {
+            const container = document.getElementById('chat-participants-list');
+            if (!container) return;
+            let allParticipants = [{ name: 'Yab Negash (Manager)', role: 'Manager', isOnline: true }, ...users];
+            container.innerHTML = allParticipants.map(u => `
+                <div class="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-900/50">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2 h-2 rounded-full ${u.isOnline !== false ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}"></span>
+                        <span class="font-medium text-slate-200 truncate max-w-[120px]">${u.name}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400">${u.role || 'Member'}</span>
+                </div>
+            `).join('');
+        }
+
+        function handleSendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            chatMessages.push({
+                sender: currentUser.name,
+                role: currentUser.role,
+                text: text,
+                time: 'Just now'
+            });
+            input.value = '';
+            renderChatMessages();
+        }
+
+        // --- Modals & Creation Utilities ---
+        function openAddCategoryModal() {
+            document.getElementById('new-category-name').value = '';
+            document.getElementById('category-modal').classList.remove('hidden');
+        }
+
+        function submitNewCategory() {
+            const name = document.getElementById('new-category-name').value.trim();
+            if (name && !categories.includes(name)) {
+                categories.push(name);
+                closeModal('category-modal');
+                renderAll();
+                showToast(`Category "${name}" created successfully.`, 'success');
+            }
+        }
+
+        function openCreateTaskModal() {
+            document.getElementById('task-title-input').value = '';
+            document.getElementById('task-items-input').value = '';
+            document.getElementById('task-desc-input').value = '';
+            populateDropdowns();
+            document.getElementById('task-modal').classList.remove('hidden');
+        }
+
+        function submitNewTask() {
+            const title = document.getElementById('task-title-input').value.trim();
+            const rawItems = document.getElementById('task-items-input').value.trim();
+            const category = document.getElementById('task-category-select').value;
+            const assignee = document.getElementById('task-assignee-select').value;
+            const desc = document.getElementById('task-desc-input').value.trim();
+
+            if (!title) {
+                showToast('Please specify a task title or subject.', 'error');
+                return;
+            }
+
+            let itemsList = [];
+            if (rawItems) {
+                itemsList = rawItems
+                    .split(/,|\n/)
+                    .map(item => item.trim())
+                    .filter(item => item.length > 0)
+                    .map(item => ({ name: item, completed: false }));
+            }
+
+            tasks.push({
+                id: Date.now(),
+                title: title,
+                category: category,
+                assignee: assignee,
+                status: 'pending',
+                deadline: 'Today, 10:00 AM',
+                desc: desc || 'Assigned by Manager Yab Negash.',
+                items: itemsList,
+                rejectionFeedback: null
+            });
+
+            closeModal('task-modal');
+            renderAll();
+            showToast(`Task batch "${title}" assigned to ${assignee}.`, 'success');
+        }
+
+        function openCreateUserModal() {
+            document.getElementById('new-user-name').value = '';
+            document.getElementById('new-user-pass').value = 'ety2026';
+            document.getElementById('user-modal').classList.remove('hidden');
+        }
+
+        function submitNewUser() {
+            const name = document.getElementById('new-user-name').value.trim();
+            const role = document.getElementById('new-user-role').value;
+            const pass = document.getElementById('new-user-pass').value.trim() || 'ety2026';
+
+            if (!name) {
+                showToast('Please enter a valid user name.', 'error');
+                return;
+            }
+
+            if (users.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+                showToast(`An account with the name "${name}" already exists.`, 'error');
+                return;
+            }
+
+            users.push({
+                id: Date.now(),
+                name,
+                pass,
+                role,
+                isOnline: false,
+                performance: '100%'
+            });
+
+            closeModal('user-modal');
+            renderAll();
+            showToast(`Account for ${name} (${role}) successfully created! Password set to "${pass}".`, 'success');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function populateDropdowns() {
+            const catSelect = document.getElementById('task-category-select');
+            if (catSelect) {
+                catSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+            const assigneeSelect = document.getElementById('task-assignee-select');
+            if (assigneeSelect) {
+                assigneeSelect.innerHTML = users.filter(u => u.role === 'Worker').map(w => `<option value="${w.name}">${w.name} (Worker)</option>`).join('');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            let borderColor = type === 'success' ? 'border-emerald-500/40 text-emerald-400' : type === 'error' ? 'border-rose-500/40 text-rose-400' : 'border-blue-500/40 text-blue-400';
+            toast.className = `glass-panel px-4 py-3 rounded-xl border ${borderColor} text-xs font-medium shadow-2xl transition transform translate-y-2 animate-fade-in flex items-center space-x-2`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info'}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        window.onload = function() {
+            initThreeBackground();
+            const savedUser = localStorage.getItem('ety_saved_username');
+            const savedPass = localStorage.getItem('ety_saved_password');
+            const savedPortal = localStorage.getItem('ety_saved_portal_type');
+            if (savedUser && savedPass) {
+                if (savedPortal) {
+                    setLoginPortalType(savedPortal);
+                }
+                document.getElementById('login-username').value = savedUser;
+                document.getElementById('login-password').value = savedPass;
+                const remBox = document.getElementById('login-remember');
+                if (remBox) remBox.checked = true;
+            }
+        };
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== ETY Empire: Supabase data layer (replaces demo in-memory data) ===== */
+const SB_URL = 'https://cclnpocfaslruvxaylgz.supabase.co';
+const SB_KEY = 'sb_publishable_Om9NKu_y5Z6-j7mukWTlYw_Od8na9UU';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+function nameToEmail(name) {
+    const n = name.trim().toLowerCase();
+    if (n === 'yab' || n === 'yab negash') return 'yab@ety.app';
+    let s = '';
+    for (const ch of n) {
+        if (/[a-z0-9]/.test(ch)) s += ch;
+        else if (/\s/.test(ch)) s += '.';
+        else s += 'u' + ch.codePointAt(0).toString(16);
+    }
+    return s.replace(/\.+/g, '.').replace(/^\.|\.$/g, '') + '@ety.app';
+}
+
+let _profiles = [], _uidByName = {}, _nameByUid = {}, _channel = null, _reloadTimer = null;
+users = []; tasks = []; financialLedger = []; chatMessages = [];
+
+function fmtTime(ts) { return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+function sbErr(error) { if (error) { showToast(error.message || 'Error', 'error'); return true; } return false; }
+
+async function loadAll() {
+    if (!currentUser) return;
+    const [p, t, c, l, m] = await Promise.all([
+        sb.from('profiles').select('*').order('created_at'),
+        sb.from('tasks').select('*').order('created_at'),
+        sb.from('categories').select('name'),
+        sb.from('ledger').select('*').order('created_at', { ascending: false }),
+        sb.from('messages').select('*').order('created_at').limit(300)
+    ]);
+    const bad = [p, t, c, l, m].find(r => r.error);
+    if (bad) { sbErr(bad.error); return; }
+    _profiles = p.data; _uidByName = {}; _nameByUid = {};
+    p.data.forEach(x => { _uidByName[x.name] = x.id; _nameByUid[x.id] = x.name; });
+    users = p.data.filter(x => x.role !== 'Manager').map((x, i) => ({ id: i + 1, uid: x.id, name: x.name, role: x.role, isOnline: x.is_online, performance: x.performance }));
+    categories = c.data.map(x => x.name);
+    if (!categories.includes(activeCategory)) activeCategory = categories[0] || '';
+    tasks = t.data.map(x => ({ id: x.id, title: x.title, category: x.category, assignee: _nameByUid[x.assignee_id] || '?', status: x.status, deadline: x.deadline || '', desc: x.description || '', items: x.items || [], rejectionFeedback: x.rejection_feedback }));
+    financialLedger = l.data.map(x => ({ id: x.id, type: x.type, user: _nameByUid[x.user_id] || '?', amount: (Number(x.amount_etb) >= 0 ? '+' : '') + x.amount_etb + ' ETB', time: new Date(x.created_at).toLocaleDateString(), note: x.note || '' }));
+    chatMessages = m.data.map(x => { const s = _profiles.find(y => y.id === x.sender_id); return { sender: s ? s.name : '?', role: s ? s.role : '', text: x.text, time: fmtTime(x.created_at) }; });
+    renderAll(); renderChatMessages(); renderChatParticipants(); renderFinancialLedger();
+}
+
+function scheduleReload() { clearTimeout(_reloadTimer); _reloadTimer = setTimeout(loadAll, 300); }
+
+async function enterApp(prof) {
+    currentUser = { id: 0, uid: prof.id, name: prof.name, role: prof.role, isOnline: true };
+    sb.from('profiles').update({ is_online: true }).eq('id', prof.id).then(() => {});
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('dashboard-view').classList.remove('hidden');
+    buildRoleAdaptiveNavigation();
+    updateHeaderRoleUI();
+    await loadAll();
+    if (_channel) sb.removeChannel(_channel);
+    _channel = sb.channel('ety-live').on('postgres_changes', { event: '*', schema: 'public' }, scheduleReload).subscribe();
+    showToast(`Logged in as ${currentUser.name} (${currentUser.role})`, 'success');
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const { data, error } = await sb.auth.signInWithPassword({ email: nameToEmail(username), password });
+    if (error) { showToast('Access Denied: wrong name or password.', 'error'); return; }
+    const { data: prof } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
+    if (!prof) { await sb.auth.signOut(); showToast('Account has no profile. Contact the Manager.', 'error'); return; }
+    if ((loginPortalType === 'manager') !== (prof.role === 'Manager')) {
+        await sb.auth.signOut();
+        showToast(loginPortalType === 'manager' ? 'This account is not a Manager.' : 'Managers must use the Manager tab.', 'error');
+        return;
+    }
+    if (document.getElementById('login-remember').checked) {
+        localStorage.setItem('ety_saved_username', username);
+        localStorage.setItem('ety_saved_portal_type', loginPortalType);
+    } else {
+        localStorage.removeItem('ety_saved_username');
+        localStorage.removeItem('ety_saved_portal_type');
+    }
+    await enterApp(prof);
+}
+
+async function handleLogout() {
+    if (currentUser) await sb.from('profiles').update({ is_online: false }).eq('id', currentUser.uid);
+    if (_channel) { sb.removeChannel(_channel); _channel = null; }
+    await sb.auth.signOut();
+    currentUser = null; users = []; tasks = []; financialLedger = []; chatMessages = [];
+    document.getElementById('dashboard-view').classList.add('hidden');
+    document.getElementById('login-view').classList.remove('hidden');
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    showToast('Logged out securely.', 'info');
+}
+
+function toggleOnlineStatus() {
+    currentUser.isOnline = !currentUser.isOnline;
+    const dot = document.getElementById('status-dot'), text = document.getElementById('status-text');
+    dot.className = currentUser.isOnline ? 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse' : 'w-2.5 h-2.5 rounded-full bg-slate-500';
+    text.innerText = currentUser.isOnline ? 'Online' : 'Offline';
+    sb.from('profiles').update({ is_online: currentUser.isOnline }).eq('id', currentUser.uid).then(() => {});
+    renderChatParticipants();
+}
+
+/* ---- tasks ---- */
+async function saveTask(id, patch) {
+    const { error } = await sb.from('tasks').update(patch).eq('id', id);
+    if (sbErr(error)) { await loadAll(); return false; }
+    return true;
+}
+function cloneItems(t) { return JSON.parse(JSON.stringify(t.items || [])); }
+
+async function toggleTaskItem(taskId, idx) {
+    const t = tasks.find(x => x.id === taskId); if (!t) return;
+    const items = cloneItems(t);
+    items[idx].completed = !items[idx].completed;
+    if (!items[idx].completed) items[idx].status = 'pending';
+    t.items = items; renderTaskCards();
+    await saveTask(taskId, { items });
+}
+
+async function submitSingleItemForReview(taskId, idx) {
+    const t = tasks.find(x => x.id === taskId); if (!t) return;
+    const items = cloneItems(t);
+    items[idx].status = 'submitted';
+    const patch = { items }; if (t.status === 'pending') patch.status = 'submitted';
+    if (await saveTask(taskId, patch)) { await loadAll(); showToast(`Submitted "${items[idx].name}" for review!`, 'success'); }
+}
+
+async function submitTaskForReview(taskId) {
+    const t = tasks.find(x => x.id === taskId); if (!t) return;
+    const items = cloneItems(t);
+    items.forEach(i => { if (i.completed && (!i.status || i.status === 'pending')) i.status = 'submitted'; });
+    if (await saveTask(taskId, { status: 'submitted', items, rejection_feedback: null })) {
+        await loadAll(); showToast(`Task "${t.title}" submitted for review.`, 'success');
+    }
+}
+
+async function approveTaskWithChecklist() {
+    const t = tasks.find(x => x.id === activeReviewTaskId); if (!t) return;
+    if (await saveTask(t.id, { status: 'approved', rejection_feedback: null })) {
+        closeReviewerWorkspace(); await loadAll();
+        showToast(`Task "${t.title}" approved. Reward recorded.`, 'success');
+    }
+}
+
+async function rejectTaskWithChecklist() {
+    const fb = document.getElementById('reviewer-general-feedback').value.trim() || 'Checklist items failed inspection. Please review notes and fix.';
+    const t = tasks.find(x => x.id === activeReviewTaskId); if (!t) return;
+    if (await saveTask(t.id, { status: 'pending', rejection_feedback: fb })) {
+        await sb.from('messages').insert({ sender_id: currentUser.uid, text: `[Rejection Notice for "${t.title}"]: ${fb}` });
+        closeReviewerWorkspace(); await loadAll();
+        showToast(`Task "${t.title}" rejected and sent back.`, 'error');
+    }
+}
+
+async function submitNewTask() {
+    const title = document.getElementById('task-title-input').value.trim();
+    const raw = document.getElementById('task-items-input').value.trim();
+    const category = document.getElementById('task-category-select').value;
+    const assignee = document.getElementById('task-assignee-select').value;
+    const desc = document.getElementById('task-desc-input').value.trim();
+    if (!title) { showToast('Please specify a task title.', 'error'); return; }
+    if (!_uidByName[assignee]) { showToast('Please choose a worker.', 'error'); return; }
+    const items = raw ? raw.split(/,|\n/).map(s => s.trim()).filter(Boolean).map(name => ({ name, completed: false })) : [];
+    const { error } = await sb.from('tasks').insert({ title, category, assignee_id: _uidByName[assignee], description: desc || 'Assigned by Manager.', deadline: 'Today, 10:00 AM', items, created_by: currentUser.uid });
+    if (sbErr(error)) return;
+    closeModal('task-modal'); await loadAll();
+    showToast(`Task "${title}" assigned to ${assignee}.`, 'success');
+}
+
+async function submitNewCategory() {
+    const name = document.getElementById('new-category-name').value.trim();
+    if (!name || categories.includes(name)) return;
+    const { error } = await sb.from('categories').insert({ name });
+    if (sbErr(error)) return;
+    closeModal('category-modal'); await loadAll();
+    showToast(`Category "${name}" created.`, 'success');
+}
+
+/* ---- users (via Edge Function) ---- */
+function openCreateUserModal() {
+    document.getElementById('new-user-name').value = '';
+    document.getElementById('new-user-pass').value = '';
+    document.getElementById('new-user-pass').placeholder = 'Min 8 characters';
+    document.getElementById('user-modal').classList.remove('hidden');
+}
+
+async function manageUsers(body) {
+    const { data, error } = await sb.functions.invoke('manage-users', { body });
+    if (error) {
+        let msg = error.message;
+        try { const j = await error.context.json(); if (j.error) msg = j.error; } catch (_) {}
+        showToast(msg, 'error'); return false;
+    }
+    if (data && data.error) { showToast(data.error, 'error'); return false; }
+    return true;
+}
+
+async function submitNewUser() {
+    const name = document.getElementById('new-user-name').value.trim();
+    const role = document.getElementById('new-user-role').value;
+    const password = document.getElementById('new-user-pass').value;
+    if (!name) { showToast('Please enter a valid user name.', 'error'); return; }
+    if (password.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
+    if (await manageUsers({ action: 'create', name, role, password })) {
+        closeModal('user-modal'); await loadAll();
+        showToast(`Account for ${name} (${role}) created.`, 'success');
+    }
+}
+
+async function toggleUserRole(userId) {
+    const u = users.find(x => x.id === userId); if (!u) return;
+    const role = u.role === 'Worker' ? 'Reviewer' : 'Worker';
+    const { error } = await sb.from('profiles').update({ role }).eq('id', u.uid);
+    if (sbErr(error)) return;
+    await loadAll(); showToast(`${u.name} is now a ${role}.`, 'success');
+}
+
+async function deleteUserAccount(userId) {
+    const u = users.find(x => x.id === userId); if (!u) return;
+    if (!confirm(`Remove account for ${u.name}? This also deletes their tasks.`)) return;
+    if (await manageUsers({ action: 'delete', uid: u.uid })) { await loadAll(); showToast(`Removed ${u.name}.`, 'info'); }
+}
+
+/* ---- chat / ledger ---- */
+async function handleSendMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim(); if (!text) return;
+    input.value = '';
+    const { error } = await sb.from('messages').insert({ sender_id: currentUser.uid, text });
+    if (sbErr(error)) input.value = text;
+}
+function addLedgerEntry() { /* rewards are now created by the database on approval */ }
+
+/* ---- start-up: restore session ---- */
+window.onload = async function () {
+    initThreeBackground();
+    localStorage.removeItem('ety_saved_password'); // old insecure storage
+    const u = localStorage.getItem('ety_saved_username'), p = localStorage.getItem('ety_saved_portal_type');
+    if (u) { if (p) setLoginPortalType(p); document.getElementById('login-username').value = u; document.getElementById('login-remember').checked = true; }
+    const { data } = await sb.auth.getSession();
+    if (data.session) {
+        const { data: prof } = await sb.from('profiles').select('*').eq('id', data.session.user.id).single();
+        if (prof) await enterApp(prof);
+    }
+};
+
+</script>
+</body>
+</html>
